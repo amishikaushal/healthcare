@@ -81,11 +81,6 @@ cd client
 npm install
 ```
 
-Create a `.env` file in the `/client` directory:
-```env
-VITE_API_URL=http://localhost:5001/api/v1
-```
-
 Start the Vite development server:
 ```bash
 npm run dev
@@ -128,14 +123,3 @@ recoveryos/
 
 ---
 
-## 🤝 Contributing
-
-We welcome contributions! To contribute:
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
-
-## 📄 License
-This project is licensed under the MIT License.
