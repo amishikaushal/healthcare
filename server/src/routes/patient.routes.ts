@@ -4,7 +4,7 @@ import { authenticate, authorize, ownPatientOrDoctor } from '../middleware/auth'
 import { validate } from '../middleware/validate'
 
 // Controllers
-import { createLog, getLogs, getTodayLog, updateLog } from '../controllers/recoveryLog.controller'
+import { createLog, getLogs, getTodayLog, updateLog, getConditionProfile } from '../controllers/recoveryLog.controller'
 import { generateReport, getReports, addDoctorNotes } from '../controllers/weeklyReport.controller'
 import {
   getMedications, markMedicationTaken, getExercises, logExercise,
@@ -55,7 +55,7 @@ router.get('/alerts', getRiskAlerts)
 
 // ── Recovery Logs (original patient-scoped) ───────────────────────────────────
 router.post('/patients/:patientId/recovery-logs',
-  [param('patientId').isUUID(), body('painLevel').isInt({ min: 0, max: 10 })],
+  [param('patientId').isUUID(), body('overallFeeling').optional().isInt({ min: 1, max: 10 })],
   validate, ownPatientOrDoctor, createLog
 )
 router.get('/patients/:patientId/recovery-logs',
@@ -65,6 +65,10 @@ router.get('/patients/:patientId/recovery-logs',
 router.get('/patients/:patientId/recovery-logs/today',
   [param('patientId').isUUID()],
   validate, ownPatientOrDoctor, getTodayLog
+)
+router.get('/patients/:patientId/recovery-logs/profile',
+  [param('patientId').isUUID()],
+  validate, ownPatientOrDoctor, getConditionProfile
 )
 router.patch('/recovery-logs/:logId', validate, updateLog)
 

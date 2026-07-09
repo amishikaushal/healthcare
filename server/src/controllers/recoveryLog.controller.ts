@@ -4,6 +4,8 @@ import { db } from '../database/db'
 import { ApiError } from '../utils/errors'
 import { ApiResponse } from '../types'
 import { analyseRisk } from '../services/gemini.service'
+import { calculateAndSaveRecoveryScore } from '../services/recoveryScore.service'
+import { getProfileForCondition, mapConditionToCategory } from '../config/recoveryProfiles'
 
 // ── Create daily log ──────────────────────────────────────────────────────────
 export const createLog = async (
@@ -38,6 +40,9 @@ export const createLog = async (
 
     // Async risk analysis (fire and forget)
     triggerRiskAnalysis(patientId).catch(() => {})
+
+    // Calculate and save recovery score
+    calculateAndSaveRecoveryScore(patientId, carePlanId || null).catch(() => {})
 
     res.status(201).json({ success: true, data: log } as ApiResponse)
   } catch (err) { next(err) }
@@ -102,7 +107,8 @@ export const updateLog = async (
     let i = 1
 
     const allowed = ['pain_level','overall_feeling','energy_level','sleep_hours',
-                     'sleep_quality','mobility_score','notes','vitals','status']
+                     'sleep_quality','mobility_score','notes','vitals','status',
+                     'updated_by']
 
     for (const [key, val] of Object.entries(updates)) {
       const col = key.replace(/([A-Z])/g, '_$1').toLowerCase()
@@ -121,7 +127,49 @@ export const updateLog = async (
       values
     )
     if (!log) throw new ApiError(404, 'Log not found')
+
+    // Recalculate score on update
+    calculateAndSaveRecoveryScore(log.patient_id, log.care_plan_id).catch(() => {})
+
     res.json({ success: true, data: log } as ApiResponse)
+  } catch (err) { next(err) }
+}
+
+// ── GET condition profile for patient ────────────────────────────────────────
+export const getConditionProfile = async (
+  req: Request, res: Response, next: NextFunction
+): Promise<void> => {
+  try {
+    const { patientId } = req.params
+
+    // 1. Try primary-severity condition first, then any active condition
+    const { rows } = await db.query(
+      `SELECT name, icd_code, severity
+       FROM conditions
+       WHERE patient_id = $1
+         AND status = 'active'
+         AND deleted_at IS NULL
+       ORDER BY
+         CASE severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2
+                       WHEN 'medium'   THEN 3 WHEN 'low'  THEN 4 ELSE 5 END,
+         created_at ASC
+       LIMIT 1`,
+      [patientId]
+    )
+
+    const conditionName: string | null = rows[0]?.name ?? null
+    const profile = getProfileForCondition(conditionName)
+    const category = mapConditionToCategory(conditionName ?? '')
+
+    res.json({
+      success: true,
+      data: {
+        condition: conditionName,
+        icdCode:   rows[0]?.icd_code ?? null,
+        category,
+        profile,
+      },
+    } as ApiResponse)
   } catch (err) { next(err) }
 }
 

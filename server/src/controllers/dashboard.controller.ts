@@ -20,7 +20,7 @@ export const getDashboardSummary = async (
 
     // ── Latest recovery score ─────────────────────────────────────────────────
     const { rows: [latestScore] } = await db.query(
-      `SELECT overall_score, pain_score, mobility_score, medication_score, exercise_score, mood_score, sleep_score, trend, ai_analysis
+      `SELECT overall_score, pain_score, mobility_score, medication_score, exercise_score, mood_score, sleep_score, trend, ai_analysis, breakdown
        FROM recovery_scores
        WHERE patient_id=$1
        ORDER BY score_date DESC LIMIT 1`,
@@ -45,6 +45,17 @@ export const getDashboardSummary = async (
        FROM recovery_logs
        WHERE patient_id=$1 AND log_date >= CURRENT_DATE - INTERVAL '6 days' AND deleted_at IS NULL
        ORDER BY log_date ASC`,
+      [patientId]
+    )
+
+    // ── This week's score trend (last 7 days) ──────────────────────────────────
+    const { rows: scoreTrend } = await db.query(
+      `SELECT to_char(score_date,'Dy') AS day,
+              overall_score AS score,
+              score_date
+       FROM recovery_scores
+       WHERE patient_id=$1 AND score_date >= CURRENT_DATE - INTERVAL '6 days'
+       ORDER BY score_date ASC`,
       [patientId]
     )
 
@@ -136,9 +147,11 @@ export const getDashboardSummary = async (
               mood:       latestScore.mood_score       ? Math.round(Number(latestScore.mood_score))       : null,
               delta:      prevScore ? Math.round(Number(latestScore.overall_score) - Number(prevScore.overall_score)) : null,
               trend:      latestScore.trend,
+              breakdown:  latestScore.breakdown,
             }
           : null,
         weekTrend,
+        scoreTrend,
         medications: medications.map((m: any) => ({
           id:           m.id,
           name:         m.name,

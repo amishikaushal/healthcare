@@ -18,13 +18,13 @@ function PatientCard({ p }: { p: any }) {
   const loggedToday = p.lastLogDate && isToday(new Date(p.lastLogDate))
   return (
     <Link to={`/caregiver/patients/${p.patientId}`}
-      className="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-800/60 transition-colors group">
+      className="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-100/60 transition-colors group">
       <div className="w-9 h-9 rounded-xl bg-emerald-600/30 text-emerald-300 text-sm font-bold flex items-center justify-center shrink-0">
         {p.initials}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-200">{p.name}</span>
+          <span className="text-sm font-medium text-surface-900">{p.name}</span>
           {!p.isLinked && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-medium">New</span>
           )}
@@ -32,7 +32,7 @@ function PatientCard({ p }: { p: any }) {
             <span className="w-4 h-4 rounded-full bg-danger-600 text-white text-[10px] flex items-center justify-center font-bold">{p.alertCount}</span>
           )}
         </div>
-        <p className="text-xs text-slate-500 mt-0.5 truncate">
+        <p className="text-xs text-surface-500 mt-0.5 truncate">
           {p.conditionName}{p.relationship ? ` · ${p.relationship}` : ''}
         </p>
       </div>
@@ -43,17 +43,17 @@ function PatientCard({ p }: { p: any }) {
               <div className={clsx('text-sm font-bold', p.score >= 80 ? 'text-success-500' : p.score >= 60 ? 'text-warning-500' : 'text-danger-500')}>
                 {p.score}%
               </div>
-              <div className="text-xs text-slate-600">score</div>
+              <div className="text-xs text-surface-600">score</div>
             </>
           ) : (
-            <div className="text-xs text-slate-600">No data</div>
+            <div className="text-xs text-surface-600">No data</div>
           )}
         </div>
         <span className={riskColor[p.riskLevel as keyof typeof riskColor]}>{p.riskLevel}</span>
-        <div className="flex items-center gap-1 text-xs text-slate-600">
+        <div className="flex items-center gap-1 text-xs text-surface-600">
           {loggedToday ? <CheckCircle2 className="w-3.5 h-3.5 text-success-500" /> : <XCircle className="w-3.5 h-3.5 text-danger-500" />}
         </div>
-        <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
+        <ChevronRight className="w-4 h-4 text-surface-600 group-hover:text-surface-500 transition-colors" />
       </div>
     </Link>
   )
@@ -108,10 +108,10 @@ export default function CaregiverDashboard() {
       {/* Greeting */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100">
+          <h2 className="text-2xl font-bold text-surface-900">
             Good {greeting}, {user?.firstName} 👋
           </h2>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-surface-500 text-sm mt-1">
             {format(new Date(), 'EEEE, d MMMM yyyy')} · Caregiver Dashboard
           </p>
         </div>
@@ -127,8 +127,8 @@ export default function CaregiverDashboard() {
             <div className={clsx('w-9 h-9 rounded-xl flex items-center justify-center mb-3', s.color)}>
               <s.icon className="w-4 h-4 text-white" />
             </div>
-            <div className="text-2xl font-bold text-slate-100">{s.value}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
+            <div className="text-2xl font-bold text-surface-900">{s.value}</div>
+            <div className="text-xs text-surface-500 mt-0.5">{s.label}</div>
           </div>
         ))}
       </div>
@@ -137,9 +137,9 @@ export default function CaregiverDashboard() {
         {/* Patient list */}
         <div className="lg:col-span-2 glass p-5 rounded-2xl">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-200 text-sm flex items-center gap-2">
+            <h3 className="font-semibold text-surface-900 text-sm flex items-center gap-2">
               <Users className="w-4 h-4 text-emerald-400" /> My Patients
-              <span className="text-xs text-slate-500">({patients?.length ?? 0})</span>
+              <span className="text-xs text-surface-500">({patients?.length ?? 0})</span>
             </h3>
             <Link to="/caregiver/patients" className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
               View all <ChevronRight className="w-3 h-3" />
@@ -149,8 +149,8 @@ export default function CaregiverDashboard() {
             {patients?.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="w-10 h-10 text-slate-700 mx-auto mb-2" />
-                <p className="text-sm text-slate-500">No patients yet</p>
-                <p className="text-xs text-slate-600 mt-1">Patients appear here once they register</p>
+                <p className="text-sm text-surface-500">No patients yet</p>
+                <p className="text-xs text-surface-600 mt-1">Patients appear here once they register</p>
               </div>
             ) : (
               patients.slice(0, 6).map((p: any) => <PatientCard key={p.patientId} p={p} />)
@@ -160,7 +160,7 @@ export default function CaregiverDashboard() {
 
         {/* Risk Alerts */}
         <div className="glass p-5 rounded-2xl">
-          <h3 className="font-semibold text-slate-200 text-sm flex items-center gap-2 mb-4">
+          <h3 className="font-semibold text-surface-900 text-sm flex items-center gap-2 mb-4">
             <AlertTriangle className="w-4 h-4 text-danger-500" /> Risk Alerts
             {alerts?.length > 0 && <span className="ml-auto badge-red">{alerts.length}</span>}
           </h3>
@@ -168,14 +168,14 @@ export default function CaregiverDashboard() {
             {alerts?.length === 0 ? (
               <div className="text-center py-4">
                 <CheckCircle2 className="w-6 h-6 text-success-500 mx-auto mb-1" />
-                <p className="text-xs text-slate-500">No active alerts</p>
+                <p className="text-xs text-surface-500">No active alerts</p>
               </div>
             ) : (
               alerts.slice(0, 5).map((a: any) => (
                 <div key={a.id} className={clsx('p-3 rounded-xl border text-xs', severityColor[a.severity as keyof typeof severityColor])}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-semibold">{a.patient_name}</span>
-                    <span className="text-slate-600 text-[10px]">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</span>
+                    <span className="text-surface-600 text-[10px]">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</span>
                   </div>
                   <p className="opacity-80">{a.title}</p>
                   <Link to={`/caregiver/patients/${a.patient_id}`} className="mt-1.5 text-brand-400 hover:text-brand-300 font-medium block">

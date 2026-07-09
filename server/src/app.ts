@@ -16,6 +16,7 @@ import patientRoutes   from './routes/patient.routes';
 import doctorRoutes    from './routes/doctor.routes';
 import caregiverRoutes from './routes/caregiver.routes';
 import documentRoutes  from './routes/document.routes';
+import notificationRoutes from './routes/notification.routes';
 
 const app: Application = express();
 
@@ -61,6 +62,7 @@ app.use('/api/v1/chat',      chatRoutes)
 app.use('/api/v1/doctor',    doctorRoutes)
 app.use('/api/v1/caregiver', caregiverRoutes)
 app.use('/api/v1/documents', documentRoutes)
+app.use('/api/v1/notifications', notificationRoutes)
 app.use('/api/v1',           patientRoutes);
 
 // ── 404 & Error ───────────────────────────────────────────────────────────────

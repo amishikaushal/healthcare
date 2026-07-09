@@ -50,13 +50,25 @@ export const generateReport = async (
     )
 
     const { rows: [patient] } = await db.query(
-      `SELECT u.first_name, u.last_name, c.name AS condition, cp.title, cph.name AS phase
+      `SELECT u.first_name, u.last_name, c.name AS condition, cp.title, cph.name AS phase, cp.start_date, cp.duration_weeks
        FROM patients p JOIN users u ON u.id=p.user_id
        LEFT JOIN conditions c ON c.patient_id=p.id AND c.status='active' AND c.deleted_at IS NULL
        LEFT JOIN care_plans cp ON cp.patient_id=p.id AND cp.status='active' AND cp.deleted_at IS NULL
        LEFT JOIN care_phases cph ON cph.care_plan_id=cp.id AND cph.status='active' AND cph.deleted_at IS NULL
        WHERE p.id=$1`,
       [patientId]
+    )
+
+    const { rows: scoreRows } = await db.query(
+      `SELECT overall_score FROM recovery_scores
+       WHERE patient_id=$1 AND score_date BETWEEN $2 AND $3 ORDER BY score_date`,
+      [patientId, format(wStart,'yyyy-MM-dd'), format(wEnd,'yyyy-MM-dd')]
+    )
+
+    const { rows: apptRows } = await db.query(
+      `SELECT title, status FROM appointments
+       WHERE patient_id=$1 AND scheduled_at BETWEEN $2 AND $3 AND deleted_at IS NULL`,
+      [patientId, wStart.toISOString(), wEnd.toISOString()]
     )
 
     if (!logs.length) throw new ApiError(404, 'No recovery logs found for this week')
@@ -71,6 +83,13 @@ export const generateReport = async (
       ? Math.round((medLogs[0].taken / medLogs[0].total) * 100) : 0
     const exAdh     = exLogs[0]?.total > 0
       ? Math.round((exLogs[0].done / exLogs[0].total) * 100) : 0
+
+    let carePlanProgress = 0
+    if (patient?.start_date && patient?.duration_weeks) {
+      const daysElapsed = (Date.now() - new Date(patient.start_date).getTime()) / (1000 * 60 * 60 * 24)
+      const totalDays = patient.duration_weeks * 7
+      carePlanProgress = Math.min(100, Math.max(0, Math.round((daysElapsed / totalDays) * 100)))
+    }
 
     // Generate AI report
     const { rows: [weekNum] } = await db.query(
@@ -90,7 +109,24 @@ export const generateReport = async (
       exerciseAdherence:   exAdh,
       symptoms:            [],
       logs:                logs.map(l => l.notes || `Pain ${l.pain_level}/10, Feeling ${l.overall_feeling}/10`),
+      scoreHistory:        scoreRows.map(r => Number(r.overall_score)),
+      appointments:        apptRows as { title: string; status: string }[],
+      carePlanProgress,
     })
+
+    const packedHighlights = {
+      highlights: aiReport.highlights,
+      achievements: aiReport.achievements,
+      positiveTrends: aiReport.positiveTrends
+    }
+    const packedConcerns = {
+      areasForImprovement: aiReport.areasForImprovement,
+      riskFactors: aiReport.riskFactors
+    }
+    const packedRecommendations = {
+      recommendations: aiReport.recommendations,
+      goals: aiReport.goals
+    }
 
     // Save to DB
     const { rows: [report] } = await db.query(
@@ -104,11 +140,11 @@ export const generateReport = async (
         uuidv4(), patientId,
         format(wStart,'yyyy-MM-dd'), format(wEnd,'yyyy-MM-dd'),
         avgPain, avgMood, avgEnergy, medAdh, exAdh,
-        Math.round((avgMood / 10) * 100),
+        carePlanProgress || Math.round((avgMood / 10) * 100),
         aiReport.summary,
-        JSON.stringify(aiReport.highlights),
-        JSON.stringify(aiReport.concerns),
-        JSON.stringify(aiReport.recommendations),
+        JSON.stringify(packedHighlights),
+        JSON.stringify(packedConcerns),
+        JSON.stringify(packedRecommendations),
         req.user!.userId,
       ]
     )

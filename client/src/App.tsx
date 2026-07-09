@@ -34,6 +34,10 @@ import CaregiverPatientDetail from '@/pages/caregiver/PatientDetail'
 // Admin pages
 import AdminDashboard from '@/pages/admin/Dashboard'
 
+// Shared pages
+import NotificationsPage from '@/pages/shared/NotificationsPage'
+import NotificationPreferencesPage from '@/pages/shared/NotificationPreferencesPage'
+
 // Guards
 import PrivateRoute from '@/components/auth/PrivateRoute'
 import RoleRoute from '@/components/auth/RoleRoute'
@@ -51,6 +55,13 @@ export default function App() {
 
       {/* Protected patient routes */}
       <Route element={<PrivateRoute />}>
+        
+        {/* Shared Protected Routes (All Roles) */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
+        </Route>
+
         <Route element={<RoleRoute roles={['patient']} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard"           element={<PatientDashboard />} />

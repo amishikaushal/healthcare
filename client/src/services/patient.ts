@@ -46,6 +46,9 @@ export const fetchCarePlan = () =>
 export const fetchWeeklyReports = () =>
   api.get('/weekly-reports').then(r => r.data.data)
 
+export const generateWeeklyReport = (patientId: string) =>
+  api.post(`/patients/${patientId}/weekly-reports`).then(r => r.data.data)
+
 // ── Alerts ────────────────────────────────────────────────────────────────────
 export const fetchAlerts = () =>
   api.get('/alerts').then(r => r.data.data)
@@ -56,3 +59,8 @@ export const fetchProfile = () =>
 
 export const updateProfile = (data: Record<string, any>) =>
   api.put('/profile', data).then(r => r.data)
+
+// ── Recovery Condition Profile ─────────────────────────────────────────────────
+export const getConditionProfile = (patientId: string) =>
+  api.get(`/patients/${patientId}/recovery-logs/profile`).then(r => r.data.data)
+

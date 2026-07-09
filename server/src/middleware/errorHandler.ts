@@ -22,9 +22,10 @@ export const errorHandler = (
   // Unexpected error
   logger.error(`[${req.method}] ${req.path} — ${err.message}`, { stack: err.stack });
 
+  const isDev = process.env.NODE_ENV !== 'production'
   res.status(500).json({
     success: false,
-    message: 'Internal server error',
+    message: isDev ? err.message : 'Internal server error',
   } as ApiResponse);
 };
 

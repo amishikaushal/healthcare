@@ -83,10 +83,10 @@ function AddExerciseModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="glass w-full max-w-lg rounded-2xl p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-slate-100 flex items-center gap-2">
+          <h3 className="font-bold text-surface-900 flex items-center gap-2">
             <Dumbbell className="w-4 h-4 text-emerald-400" /> Log Exercise for Patient
           </h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-surface-500 hover:text-surface-700"><X className="w-5 h-5" /></button>
         </div>
 
         {/* Mode tabs */}
@@ -94,7 +94,7 @@ function AddExerciseModal({
           {(['catalogue', 'custom'] as const).map(m => (
             <button key={m} onClick={() => setMode(m)}
               className={clsx('flex-1 py-2 rounded-xl text-sm font-medium transition-colors',
-                mode === m ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-500 hover:text-slate-400'
+                mode === m ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30' : 'text-surface-500 hover:text-surface-500'
               )}>
               {m === 'catalogue' ? '📋 From Catalogue' : '✏️ Custom'}
             </button>
@@ -104,7 +104,7 @@ function AddExerciseModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'catalogue' ? (
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Select Exercise</label>
+              <label className="text-xs text-surface-500 mb-1 block">Select Exercise</label>
               <select value={selectedEx} onChange={e => handleCatalogueSelect(e.target.value)} className="input w-full py-2 text-sm">
                 <option value="">-- Choose from catalogue --</option>
                 {catalogue.map(ex => (
@@ -114,7 +114,7 @@ function AddExerciseModal({
             </div>
           ) : (
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Exercise Name *</label>
+              <label className="text-xs text-surface-500 mb-1 block">Exercise Name *</label>
               <input value={form.exerciseName} onChange={e => setForm(f => ({ ...f, exerciseName: e.target.value }))}
                 className="input w-full py-2 text-sm" placeholder="e.g. Knee Bends, Walking, Stretching" required />
             </div>
@@ -123,7 +123,7 @@ function AddExerciseModal({
           {/* Category & Difficulty */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Category</label>
+              <label className="text-xs text-surface-500 mb-1 block">Category</label>
               <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="input w-full py-2 text-sm">
                 <option value="strength">Strength</option>
                 <option value="cardio">Cardio</option>
@@ -133,7 +133,7 @@ function AddExerciseModal({
               </select>
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Difficulty</label>
+              <label className="text-xs text-surface-500 mb-1 block">Difficulty</label>
               <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: e.target.value }))} className="input w-full py-2 text-sm">
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -145,17 +145,17 @@ function AddExerciseModal({
           {/* Sets / Reps / Duration */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Sets done</label>
+              <label className="text-xs text-surface-500 mb-1 block">Sets done</label>
               <input type="number" value={form.setsCompleted} onChange={e => setForm(f => ({ ...f, setsCompleted: e.target.value }))}
                 className="input w-full py-2 text-sm" min={0} placeholder="3" />
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Reps done</label>
+              <label className="text-xs text-surface-500 mb-1 block">Reps done</label>
               <input type="number" value={form.repsCompleted} onChange={e => setForm(f => ({ ...f, repsCompleted: e.target.value }))}
                 className="input w-full py-2 text-sm" min={0} placeholder="10" />
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Duration (min)</label>
+              <label className="text-xs text-surface-500 mb-1 block">Duration (min)</label>
               <input type="number" value={form.durationMins} onChange={e => setForm(f => ({ ...f, durationMins: e.target.value }))}
                 className="input w-full py-2 text-sm" min={0} placeholder="15" />
             </div>
@@ -164,12 +164,12 @@ function AddExerciseModal({
           {/* Pain / Difficulty felt */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Pain during (0–10)</label>
+              <label className="text-xs text-surface-500 mb-1 block">Pain during (0–10)</label>
               <input type="number" value={form.painDuring} onChange={e => setForm(f => ({ ...f, painDuring: e.target.value }))}
                 className="input w-full py-2 text-sm" min={0} max={10} placeholder="0" />
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Difficulty felt (1–5)</label>
+              <label className="text-xs text-surface-500 mb-1 block">Difficulty felt (1–5)</label>
               <input type="number" value={form.difficultyFelt} onChange={e => setForm(f => ({ ...f, difficultyFelt: e.target.value }))}
                 className="input w-full py-2 text-sm" min={1} max={5} placeholder="3" />
             </div>
@@ -177,7 +177,7 @@ function AddExerciseModal({
 
           {/* Notes */}
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">Notes</label>
+            <label className="text-xs text-surface-500 mb-1 block">Notes</label>
             <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="input w-full py-2 text-sm resize-none" rows={2} placeholder="Patient's feedback, observations…" />
           </div>
@@ -187,7 +187,7 @@ function AddExerciseModal({
             <input type="checkbox" id="completed" checked={form.completed}
               onChange={e => setForm(f => ({ ...f, completed: e.target.checked }))}
               className="w-4 h-4 accent-emerald-500" />
-            <label htmlFor="completed" className="text-sm text-slate-400">Mark as completed</label>
+            <label htmlFor="completed" className="text-sm text-surface-500">Mark as completed</label>
           </div>
 
           {err && <p className="text-xs text-danger-400">{err}</p>}
@@ -288,7 +288,7 @@ export default function CaregiverPatientDetail() {
       )}
 
       {/* Back */}
-      <Link to="/caregiver/patients" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors">
+      <Link to="/caregiver/patients" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Patients
       </Link>
 
@@ -300,11 +300,11 @@ export default function CaregiverPatientDetail() {
               {patient.initials}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-100">{patient.name}</h2>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <h2 className="text-xl font-bold text-surface-900">{patient.name}</h2>
+              <p className="text-sm text-surface-500 mt-0.5">
                 {patient.age ? `${patient.age} yrs` : ''}{patient.gender ? ` · ${patient.gender}` : ''}
               </p>
-              {data.relationship && <p className="text-xs text-slate-600 mt-0.5 capitalize">{data.relationship}</p>}
+              {data.relationship && <p className="text-xs text-surface-600 mt-0.5 capitalize">{data.relationship}</p>}
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -322,7 +322,7 @@ export default function CaregiverPatientDetail() {
                   score >= 80 ? 'text-success-500' : score >= 60 ? 'text-warning-500' : 'text-danger-500')}>
                   {score}%
                 </div>
-                <div className="text-xs text-slate-600">recovery score</div>
+                <div className="text-xs text-surface-600">recovery score</div>
               </div>
             )}
           </div>
@@ -347,7 +347,7 @@ export default function CaregiverPatientDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Exercise history chart */}
         <div className="lg:col-span-2 glass p-5 rounded-2xl">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-surface-900 mb-4 flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-emerald-400" /> Exercise Completion — Last 7 Days
           </h3>
           {exHistory?.length > 0 ? (
@@ -365,7 +365,7 @@ export default function CaregiverPatientDetail() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-40 text-slate-600 text-sm">No exercise history yet</div>
+            <div className="flex items-center justify-center h-40 text-surface-600 text-sm">No exercise history yet</div>
           )}
         </div>
 
@@ -375,14 +375,14 @@ export default function CaregiverPatientDetail() {
             { icon: Dumbbell,       label: "Today's Exercises", value: `${exDone}/${exTotal} done`,             color: exDone === exTotal && exTotal > 0 ? 'text-success-500' : 'text-warning-500' },
             { icon: Pill,           label: 'Active Medications', value: `${medications?.length || 0} prescribed`, color: 'text-brand-400' },
             { icon: AlertTriangle,  label: 'Active Alerts',      value: alerts?.length || 0,                     color: alerts?.length > 0 ? 'text-danger-400' : 'text-success-500' },
-            { icon: Activity,       label: 'Recovery Score',     value: score !== null ? `${score}%` : '—',      color: score !== null ? (score >= 80 ? 'text-success-500' : score >= 60 ? 'text-warning-500' : 'text-danger-500') : 'text-slate-500' },
+            { icon: Activity,       label: 'Recovery Score',     value: score !== null ? `${score}%` : '—',      color: score !== null ? (score >= 80 ? 'text-success-500' : score >= 60 ? 'text-warning-500' : 'text-danger-500') : 'text-surface-500' },
           ].map(s => (
             <div key={s.label} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-surface-800 flex items-center justify-center shrink-0">
-                <s.icon className="w-4 h-4 text-slate-500" />
+              <div className="w-8 h-8 rounded-xl bg-surface-100 flex items-center justify-center shrink-0">
+                <s.icon className="w-4 h-4 text-surface-500" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-slate-500">{s.label}</p>
+                <p className="text-xs text-surface-500">{s.label}</p>
                 <p className={clsx('text-sm font-bold', s.color)}>{s.value}</p>
               </div>
             </div>
@@ -393,10 +393,10 @@ export default function CaregiverPatientDetail() {
       {/* Today's Exercises */}
       <div className="glass p-5 rounded-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-surface-900 flex items-center gap-2">
             <Dumbbell className="w-4 h-4 text-emerald-400" /> Today's Exercises
             {exTotal > 0 && (
-              <span className="text-xs text-slate-500 ml-1">({exDone}/{exTotal} completed)</span>
+              <span className="text-xs text-surface-500 ml-1">({exDone}/{exTotal} completed)</span>
             )}
           </h3>
           <button onClick={() => setShowExModal(true)}
@@ -408,15 +408,15 @@ export default function CaregiverPatientDetail() {
         {todayExercises.length === 0 ? (
           <div className="text-center py-8">
             <Dumbbell className="w-10 h-10 text-slate-700 mx-auto mb-2" />
-            <p className="text-sm text-slate-500">No exercises logged today</p>
-            <p className="text-xs text-slate-600 mt-1">Click "Add Exercise" to log one for this patient</p>
+            <p className="text-sm text-surface-500">No exercises logged today</p>
+            <p className="text-xs text-surface-600 mt-1">Click "Add Exercise" to log one for this patient</p>
           </div>
         ) : (
           <div className="space-y-2">
             {todayExercises.map((ex: any) => (
               <div key={ex.log_id || ex.id} className={clsx(
                 'flex items-center gap-3 p-3 rounded-xl transition-colors',
-                ex.completed ? 'bg-success-500/5 border border-success-500/20' : 'bg-surface-800/50'
+                ex.completed ? 'bg-success-500/5 border border-success-500/20' : 'bg-surface-50'
               )}>
                 <button
                   onClick={() => handleToggleComplete(ex)}
@@ -424,26 +424,26 @@ export default function CaregiverPatientDetail() {
                   className="shrink-0"
                 >
                   {togglingId === ex.log_id
-                    ? <Loader2 className="w-5 h-5 text-slate-500 animate-spin" />
+                    ? <Loader2 className="w-5 h-5 text-surface-500 animate-spin" />
                     : ex.completed
                       ? <CheckCircle2 className="w-5 h-5 text-success-500" />
                       : <div className="w-5 h-5 rounded-full border-2 border-slate-600" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className={clsx('text-sm font-medium', ex.completed ? 'text-slate-400 line-through' : 'text-slate-200')}>
+                  <p className={clsx('text-sm font-medium', ex.completed ? 'text-surface-500 line-through' : 'text-surface-900')}>
                     {ex.name}
                   </p>
-                  <p className="text-xs text-slate-600 mt-0.5">
+                  <p className="text-xs text-surface-600 mt-0.5">
                     {ex.category} · {ex.difficulty}
                     {ex.sets_completed ? ` · ${ex.sets_completed} sets` : ''}
                     {ex.reps_completed ? ` × ${ex.reps_completed} reps` : ''}
                     {ex.duration_mins ? ` · ${ex.duration_mins}min` : ''}
                     {ex.pain_during != null ? ` · Pain: ${ex.pain_during}/10` : ''}
                   </p>
-                  {ex.log_notes && <p className="text-xs text-slate-500 mt-0.5 italic">{ex.log_notes}</p>}
+                  {ex.log_notes && <p className="text-xs text-surface-500 mt-0.5 italic">{ex.log_notes}</p>}
                 </div>
                 {ex.logged_at && (
-                  <span className="text-xs text-slate-600 shrink-0">
+                  <span className="text-xs text-surface-600 shrink-0">
                     {format(new Date(ex.logged_at), 'h:mm a')}
                   </span>
                 )}
@@ -455,24 +455,24 @@ export default function CaregiverPatientDetail() {
 
       {/* Medications (read-only) */}
       <div className="glass p-5 rounded-2xl">
-        <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2 mb-4">
+        <h3 className="text-sm font-semibold text-surface-900 flex items-center gap-2 mb-4">
           <Pill className="w-4 h-4 text-brand-400" /> Active Medications
         </h3>
         {medications?.length === 0 ? (
-          <p className="text-sm text-slate-600 text-center py-4">No active medications</p>
+          <p className="text-sm text-surface-600 text-center py-4">No active medications</p>
         ) : (
           <div className="space-y-2">
             {medications.map((m: any) => (
-              <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl bg-surface-800/50">
+              <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl bg-surface-50">
                 <div className="w-8 h-8 rounded-xl bg-brand-600/20 flex items-center justify-center shrink-0">
                   <Pill className="w-4 h-4 text-brand-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-200">{m.name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{m.dosage} · {m.frequency} · {m.times_per_day}×/day</p>
+                  <p className="text-sm font-medium text-surface-900">{m.name}</p>
+                  <p className="text-xs text-surface-500 mt-0.5">{m.dosage} · {m.frequency} · {m.times_per_day}×/day</p>
                 </div>
                 <span className={clsx('text-xs px-2 py-1 rounded-lg',
-                  Number(m.taken_today) > 0 ? 'bg-success-500/10 text-success-500' : 'bg-surface-700 text-slate-500'
+                  Number(m.taken_today) > 0 ? 'bg-success-500/10 text-success-500' : 'bg-surface-700 text-surface-500'
                 )}>
                   {Number(m.taken_today) > 0 ? '✓ Taken' : 'Not taken'}
                 </span>

@@ -77,3 +77,28 @@ export const resolveAlert = async (
   )
   return data.data
 }
+
+// ── Care Plans ────────────────────────────────────────────────────────────────
+export const createCarePlan = async (
+  patientId: string,
+  payload: {
+    title: string
+    condition: string
+    startDate: string
+    endDate: string
+    goals: string[]
+    phases: any[]
+  }
+) => {
+  const { data } = await api.post(`/doctor/patients/${patientId}/care-plan`, payload)
+  return data.data
+}
+
+export const generateCarePlanAI = async (
+  patientId: string,
+  conditionHint?: string,
+  aiInstructions?: string
+) => {
+  const { data } = await api.post(`/doctor/patients/${patientId}/care-plan/generate`, { condition: conditionHint, instructions: aiInstructions })
+  return data.data
+}

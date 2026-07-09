@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '../database/db'
 import { ApiError } from '../utils/errors'
-import { ApiResponse } from '../types'
+import { ApiResponse, AuthTokens } from '../types'
+import { calculateAndSaveRecoveryScore } from '../services/recoveryScore.service'
+import { createNotification } from './notification.controller'
+import { generateCarePlan } from '../services/gemini.service'
 
 // ── Helper: verify doctor ─────────────────────────────────────────────────────
 function getDoctorId(req: Request): string {
@@ -107,6 +110,7 @@ export const getDoctorDashboard = async (
         carePlanTitle: p.care_plan_title || null,
         carePlanId: p.care_plan_id || null,
         score,
+        scoreStatus: p.score_breakdown?.status || null,
         alertCount: alertCnt,
         riskLevel,
         lastLogDate: p.last_log_date || null,
@@ -146,6 +150,7 @@ export const getDoctorPatients = async (
            WHERE cp.patient_id=p.id AND cp.doctor_id=$1 AND cp.deleted_at IS NULL
          ) AS is_assigned,
          (SELECT rs.overall_score FROM recovery_scores rs WHERE rs.patient_id=p.id ORDER BY rs.score_date DESC LIMIT 1) AS score,
+         (SELECT rs.breakdown->>'status' FROM recovery_scores rs WHERE rs.patient_id=p.id ORDER BY rs.score_date DESC LIMIT 1) AS score_status,
          (SELECT COUNT(*) FROM risk_alerts ra WHERE ra.patient_id=p.id AND ra.is_resolved=FALSE AND ra.deleted_at IS NULL) AS alert_count,
          (SELECT rl.log_date FROM recovery_logs rl WHERE rl.patient_id=p.id AND rl.deleted_at IS NULL ORDER BY rl.log_date DESC LIMIT 1) AS last_log_date,
          (SELECT c.name FROM conditions c WHERE c.patient_id=p.id AND c.status='active' AND c.deleted_at IS NULL ORDER BY c.created_at DESC LIMIT 1) AS condition_name,
@@ -175,6 +180,7 @@ export const getDoctorPatients = async (
         phaseName: p.phase_name || null,
         carePlanId: p.care_plan_id || null,
         score: p.score ? Math.round(Number(p.score)) : null,
+        scoreStatus: p.score_status || null,
         alertCount: alertCnt,
         riskLevel,
         lastLogDate: p.last_log_date || null,
@@ -230,7 +236,7 @@ export const getDoctorPatientDetail = async (
 
     // Latest recovery score
     const { rows: [latestScore] } = await db.query(
-      `SELECT overall_score, medication_score, exercise_score, mood_score, sleep_score
+      `SELECT overall_score, medication_score, exercise_score, mood_score, sleep_score, breakdown
        FROM recovery_scores WHERE patient_id=$1 ORDER BY score_date DESC LIMIT 1`,
       [patientId]
     )
@@ -394,7 +400,25 @@ export const createAppointment = async (
       ]
     )
 
+    // Trigger Notification
+    const { rows: [patientRecord] } = await db.query(`SELECT user_id FROM patients WHERE id = $1`, [patientId])
+    if (patientRecord?.user_id) {
+      await createNotification(
+        patientRecord.user_id,
+      'New Appointment Scheduled',
+      `You have a new ${appointmentType} appointment scheduled with your doctor on ${new Date(scheduledAt).toLocaleString()}`,
+      'appointment_created',
+      'appointment_reminders',
+      'medium',
+      appt.id,
+      '/appointments',
+      req.user!.userId
+    )
+    }
+
     res.status(201).json({ success: true, data: appt } as ApiResponse)
+
+    calculateAndSaveRecoveryScore(patientId).catch(() => {})
   } catch (err) { next(err) }
 }
 
@@ -420,6 +444,8 @@ export const updateAppointment = async (
     if (!appt) throw new ApiError(404, 'Appointment not found')
 
     res.json({ success: true, data: appt } as ApiResponse)
+
+    calculateAndSaveRecoveryScore(appt.patient_id).catch(() => {})
   } catch (err) { next(err) }
 }
 
@@ -473,9 +499,25 @@ export const prescribeMedication = async (
       ]
     )
 
+    // Trigger Notification
+    const { rows: [patientRec] } = await db.query(`SELECT user_id FROM patients WHERE id = $1`, [patientId])
+    if (patientRec?.user_id) {
+      await createNotification(
+        patientRec.user_id,
+        'New Medication Prescribed',
+        `Your doctor has prescribed ${medicationName} (${dosage}).`,
+        'medication_prescribed',
+        'medication_reminders',
+        'medium',
+        schedule.id,
+        '/medications',
+        req.user!.userId
+      )
+    }
+
     res.status(201).json({
       success: true,
-      data: { ...schedule, medicationName },
+      data: { ...schedule, name: medicationName },
     } as ApiResponse)
   } catch (err) { next(err) }
 }
@@ -520,4 +562,137 @@ export const resolveAlert = async (
 
     res.json({ success: true, data: alert } as ApiResponse)
   } catch (err) { next(err) }
+}
+
+// ── POST /doctor/patients/:patientId/care-plan ────────────────────────────────
+export const createCarePlan = async (
+  req: Request, res: Response, next: NextFunction
+): Promise<void> => {
+  try {
+    const doctorId = getDoctorId(req)
+    const { patientId } = req.params
+    const { title, condition, startDate, endDate, goals, phases } = req.body
+
+    if (!title || !condition) throw new ApiError(400, 'Title and condition are required')
+
+    await db.query('BEGIN')
+
+    const planId = uuidv4()
+    
+    // Create the care plan
+    const { rows: [plan] } = await db.query(
+      `INSERT INTO care_plans
+         (id, patient_id, doctor_id, title, description, goals, start_date, end_date, status, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'active',$9)
+       RETURNING *`,
+      [planId, patientId, doctorId, title, condition, JSON.stringify(goals || []), startDate || null, endDate || null, req.user!.userId]
+    )
+
+    // Inactivate any existing active care plans
+    await db.query(
+      `UPDATE care_plans SET status='completed', updated_at=NOW()
+       WHERE patient_id=$1 AND id != $2 AND status='active' AND deleted_at IS NULL`,
+      [patientId, planId]
+    )
+
+    // Create phases
+    if (phases && Array.isArray(phases)) {
+      for (let i = 0; i < phases.length; i++) {
+        const ph = phases[i]
+        await db.query(
+          `INSERT INTO care_phases
+             (id, care_plan_id, name, description, phase_order, status, duration_days, milestones, created_by)
+           VALUES ($1,$2,$3,$4,$5,'active',$6,$7,$8)`,
+          [
+            uuidv4(), planId, ph.name, ph.description || null, i + 1,
+            null,
+            JSON.stringify(ph.milestones || []),
+            req.user!.userId
+          ]
+        )
+      }
+    }
+
+    // Trigger Notification
+    const { rows: [pRecord] } = await db.query(`SELECT user_id FROM patients WHERE id = $1`, [patientId])
+    if (pRecord?.user_id) {
+      await createNotification(
+        pRecord.user_id,
+        'New Care Plan Assigned',
+        `Your doctor has assigned a new care plan: ${title}.`,
+        'care_plan_created',
+        'care_plan_updates',
+        'high',
+        planId,
+        '/care-plan',
+        req.user!.userId
+      )
+    }
+
+    await db.query('COMMIT')
+    res.status(201).json({ success: true, data: plan } as ApiResponse)
+  } catch (err) {
+    await db.query('ROLLBACK')
+    next(err)
+  }
+}
+
+// ── POST /doctor/patients/:patientId/care-plan/generate ───────────────────────
+export const generateCarePlanAI = async (
+  req: Request, res: Response, next: NextFunction
+): Promise<void> => {
+  try {
+    const { patientId } = req.params
+    const { condition, instructions } = req.body
+
+    // Fetch patient basic info
+    const { rows: [patient] } = await db.query(
+      `SELECT p.id, p.date_of_birth, p.gender, p.blood_type, p.height_cm, p.weight_kg, p.allergies,
+              u.first_name, u.last_name
+       FROM patients p
+       JOIN users u ON u.id = p.user_id
+       WHERE p.id = $1 AND p.deleted_at IS NULL`,
+      [patientId]
+    )
+
+    if (!patient) {
+      throw new ApiError(404, 'Patient not found')
+    }
+
+    // Calculate age
+    const age = patient.date_of_birth 
+      ? Math.floor((Date.now() - new Date(patient.date_of_birth).getTime()) / (365.25 * 24 * 3600 * 1000))
+      : null
+
+    const patientInfo = {
+      name: `${patient.first_name} ${patient.last_name}`,
+      age,
+      gender: patient.gender,
+      bloodType: patient.blood_type,
+      heightCm: patient.height_cm,
+      weightKg: patient.weight_kg,
+      allergies: patient.allergies
+    }
+
+    // Fetch recent medical documents
+    const { rows: documents } = await db.query(
+      `SELECT doc_type, title, summary 
+       FROM medical_documents 
+       WHERE patient_id = $1 AND deleted_at IS NULL 
+       ORDER BY created_at DESC LIMIT 5`,
+      [patientId]
+    )
+
+    // Generate with Gemini
+    const plan = await generateCarePlan({
+      patientInfo,
+      documents,
+      conditionHint: condition,
+      instructions
+    })
+
+    res.json({ success: true, data: plan } as ApiResponse)
+  } catch (err) {
+    next(err)
+  }
 }

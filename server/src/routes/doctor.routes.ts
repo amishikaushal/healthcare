@@ -11,6 +11,8 @@ import {
   prescribeMedication,
   stopMedication,
   resolveAlert,
+  createCarePlan,
+  generateCarePlanAI,
 } from '../controllers/doctor.controller'
 
 const router = Router()
@@ -60,6 +62,22 @@ router.delete('/patients/:patientId/medications/:scheduleId',
 router.patch('/patients/:patientId/alerts/:alertId/resolve',
   [param('patientId').isUUID(), param('alertId').isUUID()],
   validate, resolveAlert
+)
+
+// ── Care Plans ────────────────────────────────────────────────────────────────
+router.post('/patients/:patientId/care-plan',
+  [
+    param('patientId').isUUID(),
+    body('title').notEmpty(),
+    body('condition').notEmpty(),
+  ],
+  validate, createCarePlan
+)
+router.post('/patients/:patientId/care-plan/generate',
+  [
+    param('patientId').isUUID()
+  ],
+  validate, generateCarePlanAI
 )
 
 export default router

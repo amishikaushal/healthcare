@@ -6,10 +6,11 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
 import { fetchDoctorPatientDetail, createAppointment, prescribeMedication, stopMedication, resolveAlert } from '@/services/doctor'
+import api from '@/services/api'
 
 const riskColor = { low: 'badge-green', medium: 'badge-yellow', high: 'badge-red' } as const
 const scoreColor = (s: number | null) =>
-  s === null ? 'text-slate-400' : s >= 80 ? 'text-success-500' : s >= 60 ? 'text-warning-500' : 'text-danger-500'
+  s === null ? 'text-surface-500' : s >= 80 ? 'text-success-500' : s >= 60 ? 'text-warning-500' : 'text-danger-500'
 const severityColor = {
   high: 'bg-danger-500/10 border-danger-500/30 text-danger-400',
   medium: 'bg-warning-500/10 border-warning-500/30 text-warning-500',
@@ -21,7 +22,7 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
     <div className="glass px-3 py-2 text-xs">
-      <p className="text-slate-400">{label}</p>
+      <p className="text-surface-500">{label}</p>
       <p className="text-danger-400">Pain: {payload[0]?.value}/10</p>
     </div>
   )
@@ -64,18 +65,18 @@ function AddAppointmentModal({ patientId, onClose, onSuccess }: { patientId: str
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="glass w-full max-w-md rounded-2xl p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-slate-100 flex items-center gap-2"><Calendar className="w-4 h-4 text-brand-400" /> New Appointment</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300"><X className="w-5 h-5" /></button>
+          <h3 className="font-bold text-surface-900 flex items-center gap-2"><Calendar className="w-4 h-4 text-brand-400" /> New Appointment</h3>
+          <button onClick={onClose} className="text-surface-500 hover:text-surface-700"><X className="w-5 h-5" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">Title</label>
+            <label className="text-xs text-surface-500 mb-1 block">Title</label>
             <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
               className="input w-full py-2 text-sm" placeholder="e.g. Follow-up, Check-up" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Type</label>
+              <label className="text-xs text-surface-500 mb-1 block">Type</label>
               <select value={form.appointmentType} onChange={e => setForm(f => ({ ...f, appointmentType: e.target.value as 'in_person' | 'telehealth' | 'home_visit' }))} className="input w-full py-2 text-sm">
                 <option value="in_person">In Person</option>
                 <option value="telehealth">Telehealth</option>
@@ -83,23 +84,23 @@ function AddAppointmentModal({ patientId, onClose, onSuccess }: { patientId: str
               </select>
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Duration (mins)</label>
+              <label className="text-xs text-surface-500 mb-1 block">Duration (mins)</label>
               <input type="number" value={form.durationMins} onChange={e => setForm(f => ({ ...f, durationMins: +e.target.value }))}
                 className="input w-full py-2 text-sm" min={15} step={15} />
             </div>
           </div>
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">Date & Time *</label>
+            <label className="text-xs text-surface-500 mb-1 block">Date & Time *</label>
             <input type="datetime-local" value={form.scheduledAt} onChange={e => setForm(f => ({ ...f, scheduledAt: e.target.value }))}
               className="input w-full py-2 text-sm" required />
           </div>
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">Location</label>
+            <label className="text-xs text-surface-500 mb-1 block">Location</label>
             <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))}
               className="input w-full py-2 text-sm" placeholder="Room 204, Clinic B…" />
           </div>
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">Pre-appointment Notes</label>
+            <label className="text-xs text-surface-500 mb-1 block">Pre-appointment Notes</label>
             <textarea value={form.preNotes} onChange={e => setForm(f => ({ ...f, preNotes: e.target.value }))}
               className="input w-full py-2 text-sm resize-none" rows={2} placeholder="Instructions for patient…" />
           </div>
@@ -157,30 +158,30 @@ function PrescribeMedModal({ patientId, onClose, onSuccess }: { patientId: strin
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="glass w-full max-w-md rounded-2xl p-6 animate-fade-in">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-slate-100 flex items-center gap-2"><Pill className="w-4 h-4 text-brand-400" /> Prescribe Medication</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300"><X className="w-5 h-5" /></button>
+          <h3 className="font-bold text-surface-900 flex items-center gap-2"><Pill className="w-4 h-4 text-brand-400" /> Prescribe Medication</h3>
+          <button onClick={onClose} className="text-surface-500 hover:text-surface-700"><X className="w-5 h-5" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">Medication Name *</label>
+            <label className="text-xs text-surface-500 mb-1 block">Medication Name *</label>
             <input value={form.medicationName} onChange={e => setForm(f => ({ ...f, medicationName: e.target.value }))}
               className="input w-full py-2 text-sm" placeholder="e.g. Naproxen, Ibuprofen" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Dosage *</label>
+              <label className="text-xs text-surface-500 mb-1 block">Dosage *</label>
               <input value={form.dosage} onChange={e => setForm(f => ({ ...f, dosage: e.target.value }))}
                 className="input w-full py-2 text-sm" placeholder="500mg" required />
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Times per day</label>
+              <label className="text-xs text-surface-500 mb-1 block">Times per day</label>
               <input type="number" value={form.timesPerDay} onChange={e => setForm(f => ({ ...f, timesPerDay: +e.target.value }))}
                 className="input w-full py-2 text-sm" min={1} max={6} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Frequency</label>
+              <label className="text-xs text-surface-500 mb-1 block">Frequency</label>
               <select value={form.frequency} onChange={e => setForm(f => ({ ...f, frequency: e.target.value as 'daily' | 'weekly' | 'monthly' | 'as_needed' }))} className="input w-full py-2 text-sm">
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
@@ -191,23 +192,23 @@ function PrescribeMedModal({ patientId, onClose, onSuccess }: { patientId: strin
             <div className="flex items-center gap-2 mt-5">
               <input type="checkbox" id="withFood" checked={form.withFood} onChange={e => setForm(f => ({ ...f, withFood: e.target.checked }))}
                 className="w-4 h-4 accent-brand-500" />
-              <label htmlFor="withFood" className="text-xs text-slate-400">Take with food</label>
+              <label htmlFor="withFood" className="text-xs text-surface-500">Take with food</label>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">Start Date</label>
+              <label className="text-xs text-surface-500 mb-1 block">Start Date</label>
               <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
                 className="input w-full py-2 text-sm" />
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1 block">End Date (optional)</label>
+              <label className="text-xs text-surface-500 mb-1 block">End Date (optional)</label>
               <input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
                 className="input w-full py-2 text-sm" />
             </div>
           </div>
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">Notes</label>
+            <label className="text-xs text-surface-500 mb-1 block">Notes</label>
             <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="input w-full py-2 text-sm resize-none" rows={2} placeholder="Special instructions…" />
           </div>
@@ -234,6 +235,8 @@ export default function PatientDetail() {
   const [showMedModal, setShowMedModal] = useState(false)
   const [resolvingId, setResolvingId] = useState<string | null>(null)
   const [stoppingMed, setStoppingMed] = useState<string | null>(null)
+  const [latestReport, setLatestReport] = useState<any>(null)
+  const [showInsightsModal, setShowInsightsModal] = useState(false)
 
   const load = async () => {
     if (!patientId) return
@@ -241,6 +244,13 @@ export default function PatientDetail() {
       setLoading(true); setError(null)
       const d = await fetchDoctorPatientDetail(patientId)
       setData(d)
+      
+      try {
+        const { data: reports } = await api.get(`/patients/${patientId}/weekly-reports`)
+        if (reports && reports.length > 0) setLatestReport(reports[0])
+      } catch (err) {
+        console.error('Failed to load weekly report', err)
+      }
     } catch (e: any) {
       setError(e?.response?.data?.message || 'Failed to load patient')
     } finally { setLoading(false) }
@@ -299,9 +309,49 @@ export default function PatientDetail() {
           onSuccess={med => setData((p: any) => ({ ...p, medications: [med, ...p.medications] }))}
         />
       )}
+      {showInsightsModal && latestReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="glass w-full max-w-3xl rounded-2xl p-6 animate-fade-in max-h-[90vh] overflow-y-auto relative">
+            <button onClick={() => setShowInsightsModal(false)} className="absolute top-6 right-6 text-surface-500 hover:text-surface-700">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-surface-900 flex items-center gap-2 mb-4">
+              Weekly AI Insights <span className="badge-teal text-xs ml-2">Generated {format(new Date(latestReport.created_at), 'd MMM yyyy')}</span>
+            </h2>
+            <div className="space-y-4">
+              <div className="p-4 bg-brand-50 border border-brand-100 rounded-xl">
+                <h3 className="text-sm font-semibold text-brand-700 mb-2">Clinical Summary</h3>
+                <p className="text-sm text-surface-700 leading-relaxed whitespace-pre-line">{latestReport.ai_summary}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-surface-50 border border-surface-100 rounded-xl">
+                  <h3 className="text-sm font-semibold text-success-600 mb-2">Progress & Highlights</h3>
+                  <ul className="text-sm text-surface-700 space-y-1 pl-4 list-disc">
+                    {(() => {
+                      const highlightsObj = typeof latestReport.highlights === 'string' ? JSON.parse(latestReport.highlights) : (latestReport.highlights || {});
+                      const list = highlightsObj.highlights || highlightsObj.items || highlightsObj.achievements || [];
+                      return list.map((item: string, i: number) => <li key={i}>{item}</li>)
+                    })()}
+                  </ul>
+                </div>
+                <div className="p-4 bg-surface-50 border border-surface-100 rounded-xl">
+                  <h3 className="text-sm font-semibold text-warning-600 mb-2">Areas of Concern</h3>
+                  <ul className="text-sm text-surface-700 space-y-1 pl-4 list-disc">
+                    {(() => {
+                      const concernsObj = typeof latestReport.concerns === 'string' ? JSON.parse(latestReport.concerns) : (latestReport.concerns || {});
+                      const list = concernsObj.areasForImprovement || concernsObj.items || concernsObj.riskFactors || [];
+                      return list.map((item: string, i: number) => <li key={i}>{item}</li>)
+                    })()}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Back */}
-      <Link to="/doctor/patients" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors">
+      <Link to="/doctor/patients" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-700 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Patients
       </Link>
 
@@ -313,12 +363,12 @@ export default function PatientDetail() {
               {patient.initials}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-100">{patient.name}</h2>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <h2 className="text-xl font-bold text-surface-900">{patient.name}</h2>
+              <p className="text-sm text-surface-500 mt-0.5">
                 {patient.age ? `${patient.age} yrs` : ''}{patient.gender ? ` · ${patient.gender}` : ''} · {conditionName}
               </p>
               {carePlan && (
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-xs text-surface-600 mt-1">
                   {carePlan.phase_name || carePlan.title}
                 </p>
               )}
@@ -326,9 +376,27 @@ export default function PatientDetail() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <span className={(riskColor as any)[riskLevel]}>{riskLevel} risk</span>
-            <div className="text-right">
-              <div className={clsx('text-2xl font-bold', scoreColor(score))}>{score !== null ? `${score}%` : '—'}</div>
-              <div className="text-xs text-slate-600">recovery score</div>
+            
+            {latestReport && (
+              <button onClick={() => setShowInsightsModal(true)} className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 ml-2 mr-2 border-teal-200 text-teal-700 bg-teal-50 hover:bg-teal-100">
+                <Activity className="w-3.5 h-3.5" />
+                View AI Insights
+              </button>
+            )}
+
+            <div className="text-right border-l border-surface-200 pl-4">
+              <div className="flex items-end gap-2 justify-end">
+                <div className={clsx('text-2xl font-bold', scoreColor(score))}>{score !== null ? `${score}%` : '—'}</div>
+                {patient.scoreStatus && (
+                  <div className={clsx('text-xs px-2 py-0.5 rounded-full mb-1', 
+                    patient.scoreStatus === 'Excellent' ? 'bg-success-500/10 text-success-600' :
+                    patient.scoreStatus === 'On Track' ? 'bg-brand-500/10 text-brand-600' :
+                    patient.scoreStatus === 'Needs Attention' ? 'bg-warning-500/10 text-warning-600' : 'bg-danger-500/10 text-danger-600')}>
+                    {patient.scoreStatus}
+                  </div>
+                )}
+              </div>
+              <div className="text-xs text-surface-600">recovery score</div>
             </div>
           </div>
         </div>
@@ -358,27 +426,54 @@ export default function PatientDetail() {
 
       {/* Stats + Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass p-5 rounded-2xl">
-          <h3 className="text-sm font-semibold text-slate-200 mb-4">Pain & Mood Trend — Last 7 Days</h3>
-          {painTrend?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={160}>
-              <AreaChart data={painTrend} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="painGrad2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 10]} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="pain" stroke="#f43f5e" fill="url(#painGrad2)" strokeWidth={2} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-40 text-slate-600 text-sm">No recovery logs yet</div>
-          )}
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          
+          <div className="glass p-5 rounded-2xl">
+            <h3 className="text-sm font-semibold text-surface-900 mb-4">Recovery Trajectory</h3>
+            {patient.scoreTrend?.length > 0 ? (
+              <ResponsiveContainer width="100%" height={160}>
+                <AreaChart data={patient.scoreTrend} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="scoreGrad2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{borderRadius: '8px', border: 'none', background: '#fff', color: '#334155'}} />
+                  <Area type="monotone" dataKey="score" stroke="#14b8a6" fill="url(#scoreGrad2)" strokeWidth={2} dot={{ fill: '#14b8a6', strokeWidth: 2, r: 4, stroke: '#fff' }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-40 text-surface-600 text-sm">No recovery scores yet</div>
+            )}
+          </div>
+
+          <div className="glass p-5 rounded-2xl">
+            <h3 className="text-sm font-semibold text-surface-900 mb-4">Pain & Mood Trend</h3>
+            {painTrend?.length > 0 ? (
+              <ResponsiveContainer width="100%" height={160}>
+                <AreaChart data={painTrend} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="painGrad2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 10]} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="pain" stroke="#f43f5e" fill="url(#painGrad2)" strokeWidth={2} dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-40 text-surface-600 text-sm">No recovery logs yet</div>
+            )}
+          </div>
+
         </div>
 
         <div className="glass p-5 rounded-2xl space-y-4">
@@ -389,11 +484,11 @@ export default function PatientDetail() {
             { icon: AlertTriangle, label: 'Active Alerts', value: alerts?.length ?? 0,                                          color: alerts?.length > 0 ? 'text-danger-400' : 'text-success-500' },
           ].map(s => (
             <div key={s.label} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-surface-800 flex items-center justify-center">
-                <s.icon className="w-4 h-4 text-slate-500" />
+              <div className="w-8 h-8 rounded-xl bg-surface-100 flex items-center justify-center">
+                <s.icon className="w-4 h-4 text-surface-500" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-slate-500">{s.label}</p>
+                <p className="text-xs text-surface-500">{s.label}</p>
                 <p className={clsx('text-sm font-bold', s.color)}>{s.value}</p>
               </div>
             </div>
@@ -404,7 +499,7 @@ export default function PatientDetail() {
       {/* Appointments */}
       <div className="glass p-5 rounded-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-surface-900 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-warning-500" /> Appointments
           </h3>
           <button onClick={() => setShowApptModal(true)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5">
@@ -412,19 +507,19 @@ export default function PatientDetail() {
           </button>
         </div>
         {appointments?.length === 0 ? (
-          <div className="text-center py-6 text-slate-600 text-sm">No appointments yet. Click Add to schedule one.</div>
+          <div className="text-center py-6 text-surface-600 text-sm">No appointments yet. Click Add to schedule one.</div>
         ) : (
           <div className="space-y-2">
             {appointments.map((a: any) => (
-              <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl bg-surface-800/50 text-sm">
+              <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl bg-surface-50 text-sm">
                 <div className={clsx('w-2 h-8 rounded-full shrink-0',
                   a.status === 'completed' ? 'bg-slate-600' :
                   a.status === 'cancelled' ? 'bg-danger-600' :
                   a.appointment_type === 'telehealth' ? 'bg-indigo-500' : 'bg-brand-500'
                 )} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-200 truncate">{a.title || 'Appointment'}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="font-medium text-surface-900 truncate">{a.title || 'Appointment'}</p>
+                  <p className="text-xs text-surface-500 mt-0.5">
                     {format(new Date(a.scheduled_at), 'MMM d, yyyy h:mm a')} · {a.duration_mins}min · {a.appointment_type}
                   </p>
                 </div>
@@ -442,7 +537,7 @@ export default function PatientDetail() {
       {/* Medications */}
       <div className="glass p-5 rounded-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-surface-900 flex items-center gap-2">
             <Pill className="w-4 h-4 text-brand-400" /> Active Medications
           </h3>
           <button onClick={() => setShowMedModal(true)} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5">
@@ -450,17 +545,17 @@ export default function PatientDetail() {
           </button>
         </div>
         {medications?.length === 0 ? (
-          <div className="text-center py-6 text-slate-600 text-sm">No active medications. Click Prescribe to add one.</div>
+          <div className="text-center py-6 text-surface-600 text-sm">No active medications. Click Prescribe to add one.</div>
         ) : (
           <div className="space-y-2">
             {medications.map((m: any) => (
-              <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl bg-surface-800/50">
+              <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl bg-surface-50">
                 <div className="w-8 h-8 rounded-xl bg-brand-600/20 flex items-center justify-center shrink-0">
                   <Pill className="w-4 h-4 text-brand-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-200">{m.name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{m.dosage} · {m.frequency} · {m.times_per_day}x/day</p>
+                  <p className="text-sm font-medium text-surface-900">{m.name}</p>
+                  <p className="text-xs text-surface-500 mt-0.5">{m.dosage} · {m.frequency} · {m.times_per_day}x/day</p>
                 </div>
                 <button
                   onClick={() => handleStopMed(m.id)}
@@ -483,7 +578,7 @@ export default function PatientDetail() {
         <button onClick={() => setShowMedModal(true)} className="btn-secondary text-sm flex items-center gap-2">
           <Pill className="w-4 h-4" /> Prescribe Medication
         </button>
-        <Link to="/doctor/care-plans/new" className="btn-secondary text-sm flex items-center gap-2">
+        <Link to="/doctor/care-plans/new" state={{ patientId: patient.patientId }} className="btn-secondary text-sm flex items-center gap-2">
           <TrendingUp className="w-4 h-4" /> Care Plan
         </Link>
       </div>

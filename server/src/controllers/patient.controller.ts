@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { db } from '../database/db'
 import { ApiError } from '../utils/errors'
 import { ApiResponse } from '../types'
+import { calculateAndSaveRecoveryScore } from '../services/recoveryScore.service'
 
 // ── Get all medication schedules for a patient ────────────────────────────────
 export const getMedications = async (
@@ -102,6 +103,7 @@ export const markMedicationTaken = async (
     )
 
     res.json({ success: true, data: log } as ApiResponse)
+    calculateAndSaveRecoveryScore(patientId!).catch(() => {})
   } catch (err) { next(err) }
 }
 
@@ -193,6 +195,7 @@ export const logExercise = async (
     )
 
     res.json({ success: true, data: log } as ApiResponse)
+    calculateAndSaveRecoveryScore(patientId!).catch(() => {})
   } catch (err) { next(err) }
 }
 
@@ -265,7 +268,9 @@ export const cancelAppointment = async (
     )
     if (!appt) throw new ApiError(404, 'Appointment not found or cannot be cancelled')
 
-    res.json({ success: true, data: appt } as ApiResponse)
+    res.json({ success: true, message: 'Appointment cancelled' } as ApiResponse)
+
+    calculateAndSaveRecoveryScore(patientId!).catch(() => {})
   } catch (err) { next(err) }
 }
 
