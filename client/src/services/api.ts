@@ -1,11 +1,9 @@
 import axios, { InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store/authStore'
 
-// In production (Vercel), VITE_API_URL points to the Render backend.
+// In production (Vercel), VITE_API_URL is the full base URL including /api/v1.
 // In local dev, it is undefined and the Vite proxy handles '/api/v1'.
-const BASE_URL = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api/v1`
-  : '/api/v1'
+const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
 
 export const api = axios.create({
   baseURL: BASE_URL,
