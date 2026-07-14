@@ -471,27 +471,64 @@ CREATE INDEX idx_doc_chunks_patient ON document_chunks(patient_id);
 CREATE INDEX idx_doc_chunks_qdrant ON document_chunks(qdrant_point_id);
 
 -- ============================================================
--- 19. NOTIFICATIONS
+-- 19. NOTIFICATION PREFERENCES & NOTIFICATIONS
 -- ============================================================
-CREATE TABLE notifications (
-  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type            notification_type NOT NULL,
-  title           VARCHAR(255) NOT NULL,
-  body            TEXT NOT NULL,
-  data            JSONB DEFAULT '{}',
-  is_read         BOOLEAN NOT NULL DEFAULT FALSE,
-  read_at         TIMESTAMPTZ,
-  sent_via        TEXT[] DEFAULT '{}',
-  scheduled_at    TIMESTAMPTZ,
-  sent_at         TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at      TIMESTAMPTZ
+CREATE TABLE notification_preferences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  medication_reminders BOOLEAN DEFAULT TRUE,
+  appointment_reminders BOOLEAN DEFAULT TRUE,
+  doctor_messages BOOLEAN DEFAULT TRUE,
+  care_plan_updates BOOLEAN DEFAULT TRUE,
+  risk_alerts BOOLEAN DEFAULT TRUE,
+  ai_weekly_reports BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id)
 );
 
-CREATE INDEX idx_notifications_user ON notifications(user_id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_notifications_unread ON notifications(user_id, is_read) WHERE deleted_at IS NULL AND is_read = FALSE;
-CREATE INDEX idx_notifications_type ON notifications(type) WHERE deleted_at IS NULL;
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  type VARCHAR(100) NOT NULL,
+  category VARCHAR(100),
+  priority VARCHAR(20) DEFAULT 'medium',
+  status VARCHAR(20) DEFAULT 'unread',
+  related_entity_id UUID,
+  action_url VARCHAR(255),
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_status ON notifications(status);
+CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+
+-- ============================================================
+-- 19.5 PATIENT DOCUMENTS
+-- ============================================================
+CREATE TABLE patient_documents (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  patient_id    UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  title         VARCHAR(255) NOT NULL,
+  doc_type      VARCHAR(50)  NOT NULL DEFAULT 'other',
+  file_name     VARCHAR(255) NOT NULL,
+  file_size     INTEGER      NOT NULL,
+  mime_type     VARCHAR(100) NOT NULL,
+  file_data     BYTEA        NOT NULL,
+  ocr_text      TEXT,
+  ai_summary    TEXT,
+  is_processed  BOOLEAN      NOT NULL DEFAULT false,
+  tags          TEXT[]       NOT NULL DEFAULT '{}',
+  created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_patient_documents_patient_id ON patient_documents(patient_id);
+CREATE INDEX idx_patient_documents_doc_type   ON patient_documents(doc_type);
 
 -- ============================================================
 -- 20. RISK ALERTS
@@ -544,9 +581,7 @@ CREATE TABLE recovery_scores (
 CREATE UNIQUE INDEX idx_recovery_scores_date ON recovery_scores(patient_id, score_date, care_plan_id);
 CREATE INDEX idx_recovery_scores_patient ON recovery_scores(patient_id);
 
--- ============================================================
--- 22. WEEKLY REPORTS
--- ============================================================
+
 CREATE TABLE weekly_reports (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   patient_id          UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -576,9 +611,7 @@ CREATE TABLE weekly_reports (
 CREATE UNIQUE INDEX idx_weekly_reports_week ON weekly_reports(patient_id, week_start) WHERE deleted_at IS NULL;
 CREATE INDEX idx_weekly_reports_patient ON weekly_reports(patient_id) WHERE deleted_at IS NULL;
 
--- ============================================================
--- 23. CHAT SESSIONS
--- ============================================================
+
 CREATE TABLE chat_sessions (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   patient_id      UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
@@ -596,9 +629,7 @@ CREATE TABLE chat_sessions (
 CREATE INDEX idx_chat_sessions_patient ON chat_sessions(patient_id) WHERE deleted_at IS NULL;
 CREATE INDEX idx_chat_sessions_active ON chat_sessions(patient_id, is_active) WHERE deleted_at IS NULL;
 
--- ============================================================
--- 24. CHAT MESSAGES
--- ============================================================
+
 CREATE TABLE chat_messages (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   session_id      UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,

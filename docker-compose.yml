@@ -14,6 +14,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d recoveryos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -33,6 +38,46 @@ services:
       - '6379:6379'
     volumes:
       - redis_data:/data
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: recoveryos_backend
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=recoveryos
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_SSL=false
+      - QDRANT_URL=http://qdrant:6333
+      - JWT_ACCESS_SECRET=your_jwt_access_secret_here_min_64_chars_long
+      - JWT_REFRESH_SECRET=your_jwt_refresh_secret_here_min_64_chars_long
+      - CORS_ORIGINS=http://localhost:3001
+    ports:
+      - '5001:5001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: recoveryos_frontend
+    ports:
+      - '3001:80'
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:

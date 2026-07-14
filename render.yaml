@@ -1,0 +1,117 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Render Blueprint — RecoveryOS Backend
+# https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Push this file to your repo root.
+#   2. In Render dashboard → New → Blueprint → connect your repo.
+#   3. Fill in all env vars marked sync: false in the Render dashboard.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: recoveryos-api
+    runtime: docker
+    # Render builds from the server/ subdirectory Dockerfile
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+
+    # Render automatically uses the PORT env var
+    # The Dockerfile EXPOSEs 5001 — Render maps it automatically
+    healthCheckPath: /health
+
+    # Scale: free tier starts here; upgrade as needed
+    plan: free
+
+    envVars:
+      # ── App ────────────────────────────────────────────────────────────────
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: 5001
+
+      # ── Database (Neon) ─────────────────────────────────────────────────────
+      # Paste your Neon connection string from:
+      # Neon Console → Project → Connection Details → Connection string
+      - key: DATABASE_URL
+        sync: false   # fill in Render dashboard
+
+      # ── JWT Secrets ─────────────────────────────────────────────────────────
+      # Generate with: openssl rand -hex 64
+      - key: JWT_ACCESS_SECRET
+        sync: false
+
+      - key: JWT_REFRESH_SECRET
+        sync: false
+
+      - key: JWT_ACCESS_EXPIRES
+        value: 15m
+
+      - key: JWT_REFRESH_EXPIRES
+        value: 7d
+
+      - key: JWT_EMAIL_SECRET
+        sync: false
+
+      - key: JWT_RESET_SECRET
+        sync: false
+
+      # ── CORS ─────────────────────────────────────────────────────────────────
+      # Set to your Vercel production URL (no trailing slash)
+      # Example: https://recoveryos.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
+
+      # ── Gemini AI ──────────────────────────────────────────────────────────
+      - key: GEMINI_API_KEY
+        sync: false
+
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+
+      # ── Qdrant Cloud ────────────────────────────────────────────────────────
+      # Sign up at https://cloud.qdrant.io (free tier available)
+      # Copy the cluster URL and API key from your cluster dashboard
+      - key: QDRANT_URL
+        sync: false   # e.g. https://xyz.us-east4-0.gcp.cloud.qdrant.io
+
+      - key: QDRANT_API_KEY
+        sync: false
+
+      - key: QDRANT_COLLECTION
+        value: recoveryos_docs
+
+      # ── BCrypt ─────────────────────────────────────────────────────────────
+      - key: BCRYPT_ROUNDS
+        value: 12
+
+      # ── Rate Limiting ───────────────────────────────────────────────────────
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+
+      - key: RATE_LIMIT_MAX
+        value: 100
+
+      - key: RATE_LIMIT_AUTH_MAX
+        value: 50
+
+      # ── Email (SMTP) ─────────────────────────────────────────────────────────
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+
+      - key: SMTP_PORT
+        value: 587
+
+      - key: SMTP_USER
+        sync: false
+
+      - key: SMTP_PASS
+        sync: false
+
+      - key: EMAIL_FROM
+        value: noreply@recoveryos.com
+
+      # ── Uploads ─────────────────────────────────────────────────────────────
+      - key: UPLOAD_MAX_MB
+        value: 10

@@ -9,7 +9,7 @@ import { db } from './database/db';
 import { logger } from './utils/logger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
-// Routes
+
 import authRoutes      from './routes/auth.routes'
 import chatRoutes      from './routes/chat.routes'
 import patientRoutes   from './routes/patient.routes';

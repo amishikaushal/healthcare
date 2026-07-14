@@ -5,13 +5,12 @@ import {
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, AreaChart, Area
+  ResponsiveContainer
 } from 'recharts'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import { fetchWeeklyReports, generateWeeklyReport } from '@/services/patient'
 import { useAuthStore } from '@/store/authStore'
-import clsx from 'clsx'
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null

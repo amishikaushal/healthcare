@@ -17,11 +17,10 @@ import {
 
 const router = Router()
 
-// All doctor routes require authentication + doctor role
+
 router.use(authenticate)
 router.use(authorize('doctor', 'admin'))
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
 router.get('/dashboard', getDoctorDashboard)
 
 // ── Patients ──────────────────────────────────────────────────────────────────

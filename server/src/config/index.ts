@@ -1,17 +1,24 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// When DATABASE_URL is set (e.g. Neon in production), SSL is always required.
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+
 export const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '5000', 10),
 
   db: {
+    // DATABASE_URL takes priority (Neon / any connection-string provider).
+    // Falls back to individual DB_* vars for local / Docker setups.
+    connectionString: process.env.DATABASE_URL || undefined,
     host:     process.env.DB_HOST || 'localhost',
     port:     parseInt(process.env.DB_PORT || '5432', 10),
     name:     process.env.DB_NAME || 'recoveryos',
     user:     process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || '',
-    ssl:      process.env.DB_SSL === 'true',
+    // SSL is forced on when DATABASE_URL is present (required by Neon).
+    ssl:      hasDatabaseUrl || process.env.DB_SSL === 'true',
     poolMin:  parseInt(process.env.DB_POOL_MIN || '2', 10),
     poolMax:  parseInt(process.env.DB_POOL_MAX || '10', 10),
   },
@@ -36,9 +43,9 @@ export const config = {
   },
 
   rateLimit: {
-    windowMs:   15 * 60 * 1000,
-    max:        100,
-    authMax:    10,
+    windowMs:   parseInt(process.env.RATE_LIMIT_WINDOW_MS || String(15 * 60 * 1000), 10),
+    max:        parseInt(process.env.RATE_LIMIT_MAX  || '100', 10),
+    authMax:    parseInt(process.env.RATE_LIMIT_AUTH_MAX || '50', 10),
   },
 
   gemini: {

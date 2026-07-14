@@ -5,7 +5,7 @@ import { SCORING_CONFIG } from '../config/scoring'
 
 export const calculateAndSaveRecoveryScore = async (patientId: string, carePlanId: string | null = null): Promise<void> => {
   try {
-    // 1. Get today's log (for pain, mood, mobility, sleep)
+  
     const { rows: [log] } = await db.query(
       `SELECT pain_level, overall_feeling, mobility_score, sleep_quality
        FROM recovery_logs

@@ -1,8 +1,14 @@
 import axios, { InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/store/authStore'
 
+// In production (Vercel), VITE_API_URL points to the Render backend.
+// In local dev, it is undefined and the Vite proxy handles '/api/v1'.
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : '/api/v1'
+
 export const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 })
@@ -30,7 +36,7 @@ api.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post('/api/v1/auth/refresh', { refreshToken })
+        const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken })
         setTokens(data.data.accessToken, data.data.refreshToken)
         original.headers.Authorization = `Bearer ${data.data.accessToken}`
         return api(original)

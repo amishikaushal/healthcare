@@ -5,8 +5,7 @@ import { ApiError } from '../utils/errors'
 import { ApiResponse } from '../types'
 
 function getCaregiverId(req: Request): string {
-  // caregivers table stores user_id, not a separate id token field
-  // We look up via userId
+
   return req.user!.userId
 }
 

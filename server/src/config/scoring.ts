@@ -1,5 +1,5 @@
 export const SCORING_CONFIG = {
-  // Baseline Weights out of 100
+
   WEIGHTS: {
     MEDICATION: 20,
     EXERCISE: 20,
@@ -9,12 +9,12 @@ export const SCORING_CONFIG = {
     APPOINTMENT: 10,
   },
   
-  // Status Thresholds
+
   THRESHOLDS: {
     EXCELLENT: 90,
     ON_TRACK: 75,
     NEEDS_ATTENTION: 60,
-    // Below 60 is Critical
+
   },
 
   getStatus(score: number): 'Excellent' | 'On Track' | 'Needs Attention' | 'Critical' {

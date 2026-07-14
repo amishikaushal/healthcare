@@ -22,7 +22,7 @@ export const register = async (
     const passwordHash = await hashPassword(password);
 
     const result = await db.transaction(async (client) => {
-      // Create user
+
       const { rows: [user] } = await client.query(
         `INSERT INTO users
            (id, email, phone, password_hash, role, first_name, last_name)
@@ -31,7 +31,7 @@ export const register = async (
         [uuidv4(), email, phone || null, passwordHash, role, firstName, lastName]
       );
 
-      // Create role-specific profile
+     
       if (role === 'patient') {
         await client.query(
           'INSERT INTO patients (id, user_id) VALUES ($1, $2)',
@@ -54,7 +54,7 @@ export const register = async (
       [verifyToken, result.id]
     );
 
-    // TODO: send verification email via EmailService
+
 
     res.status(201).json({
       success: true,
@@ -86,7 +86,7 @@ export const login = async (
     if (!user) throw new ApiError(401, 'Invalid credentials');
     if (!user.is_active) throw new ApiError(403, 'Account deactivated');
 
-    // Lockout check
+  
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
       throw new ApiError(423, 'Account locked. Try again later');
     }
@@ -173,7 +173,7 @@ export const refreshToken = async (
   } catch (err) { next(err); }
 };
 
-// ── Logout ────────────────────────────────────────────────────────────────────
+
 export const logout = async (
   req: Request, res: Response, next: NextFunction
 ): Promise<void> => {
